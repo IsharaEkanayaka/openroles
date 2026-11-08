@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timezone
 from xml.etree import ElementTree
 
 from app.collectors.itpro import parse_item
@@ -22,6 +23,9 @@ def test_first_itpro_item_is_mapped_to_job() -> None:
     assert job.location == "Colombo"
     assert job.remote is False
     assert job.job_type == "internship"
+    assert job.posted_at is not None
+    assert job.posted_at.tzinfo == timezone.utc
+    assert job.posted_at.isoformat() == "2026-11-07T13:24:57+00:00"
     assert job.description is not None
     assert "About NITES" in job.description
     assert "Apply for this job" not in job.description

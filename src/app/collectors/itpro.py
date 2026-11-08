@@ -1,4 +1,6 @@
 import re
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from xml.etree import ElementTree
 
 from app.models import Job
@@ -31,6 +33,7 @@ def parse_item(item: ElementTree.Element, source_category: str) -> Job:
     title = _required_text(item, "title")
     location = _parse_location(_required_text(item, "description"))
     content = _required_text(item, "content:encoded", namespaces=NAMESPACES)
+    posted_at = _parse_posted_at(_required_text(item, "pubDate"))
 
     return Job(
         source="itpro",
@@ -42,6 +45,7 @@ def parse_item(item: ElementTree.Element, source_category: str) -> Job:
         remote=location == "Remote",
         job_type=_parse_job_type(content),
         description=_parse_description(content),
+        posted_at=posted_at,
         source_category=source_category,
         raw=ElementTree.tostring(item, encoding="unicode"),
     )
@@ -85,6 +89,13 @@ def _parse_description(content: str) -> str:
     if match is None:
         raise ValueError("itpro item is missing a description section")
     return match.group(1).strip()
+
+
+def _parse_posted_at(value: str) -> datetime:
+    parsed = parsedate_to_datetime(value)
+    if parsed is None:
+        raise ValueError(f"could not parse itpro publication date: {value}")
+    return parsed.astimezone(timezone.utc)
 
 
 def _remove_company_from_title(title: str, company: str) -> str:
