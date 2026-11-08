@@ -27,6 +27,14 @@ JOB_TYPES = {
 }
 
 
+def parse_feed(feed_xml: str | bytes, source_category: str) -> list[Job]:
+    root = ElementTree.fromstring(feed_xml)
+    return [
+        parse_item(item, source_category=source_category)
+        for item in root.findall("./channel/item")
+    ]
+
+
 def parse_item(item: ElementTree.Element, source_category: str) -> Job:
     url = _required_text(item, "link")
     company = _required_text(item, "dc:creator", namespaces=NAMESPACES).strip()

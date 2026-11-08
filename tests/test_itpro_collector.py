@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import timezone
 from xml.etree import ElementTree
 
-from app.collectors.itpro import parse_item
+from app.collectors.itpro import parse_feed, parse_item
 
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "itpro_software_engineering.xml"
@@ -45,3 +45,16 @@ def test_unknown_itpro_job_type_is_none() -> None:
     job = parse_item(item, source_category="software-engineering")
 
     assert job.job_type is None
+
+
+def test_entire_itpro_feed_is_mapped_to_jobs() -> None:
+    jobs = parse_feed(
+        FIXTURE_PATH.read_bytes(),
+        source_category="software-engineering",
+    )
+
+    assert len(jobs) == 25
+    assert jobs[0].source_id == "15717"
+    assert all(job.source == "itpro" for job in jobs)
+    assert all(job.source_category == "software-engineering" for job in jobs)
+    assert len({job.source_id for job in jobs}) == len(jobs)
