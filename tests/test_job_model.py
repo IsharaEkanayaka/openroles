@@ -25,6 +25,7 @@ def test_job_can_be_stored(session: Session) -> None:
         location="Colombo",
         description="Build useful software.",
         url="https://example.com/jobs/job-123",
+        job_type="full-time",
         posted_at=datetime(2026, 11, 8),
     )
 
@@ -35,6 +36,7 @@ def test_job_can_be_stored(session: Session) -> None:
     assert stored_job is not None
     assert stored_job.title == "Python Developer"
     assert stored_job.remote is False
+    assert stored_job.job_type == "full-time"
     assert stored_job.status == "open"
     assert stored_job.collected_at is not None
     assert stored_job.last_seen_at is not None

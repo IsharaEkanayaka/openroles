@@ -22,6 +22,7 @@ class Job(Base):
     location: Mapped[str | None] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text)
     remote: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    job_type: Mapped[str | None] = mapped_column(String(50))
     posted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     collected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
