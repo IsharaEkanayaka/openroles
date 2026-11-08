@@ -12,6 +12,11 @@ JOB_TYPE_PATTERN = re.compile(
     r"<strong>\s*Job Type:\s*</strong>\s*([^<]+)",
     re.IGNORECASE,
 )
+DESCRIPTION_PATTERN = re.compile(
+    r"<strong>\s*Description:\s*</strong>\s*<br\s*/?>(.*?)(?:" 
+    r"<a\b[^>]*>\s*Apply\s+for\s+this\s+job\s*</a>|$)",
+    re.IGNORECASE | re.DOTALL,
+)
 JOB_TYPES = {
     "full-time": "full-time",
     "internship": "internship",
@@ -36,6 +41,7 @@ def parse_item(item: ElementTree.Element, source_category: str) -> Job:
         location=location,
         remote=location == "Remote",
         job_type=_parse_job_type(content),
+        description=_parse_description(content),
         source_category=source_category,
         raw=ElementTree.tostring(item, encoding="unicode"),
     )
@@ -72,6 +78,13 @@ def _parse_job_type(content: str) -> str | None:
     if match is None:
         return None
     return JOB_TYPES.get(match.group(1).strip().lower())
+
+
+def _parse_description(content: str) -> str:
+    match = DESCRIPTION_PATTERN.search(content)
+    if match is None:
+        raise ValueError("itpro item is missing a description section")
+    return match.group(1).strip()
 
 
 def _remove_company_from_title(title: str, company: str) -> str:

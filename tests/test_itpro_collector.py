@@ -22,6 +22,9 @@ def test_first_itpro_item_is_mapped_to_job() -> None:
     assert job.location == "Colombo"
     assert job.remote is False
     assert job.job_type == "internship"
+    assert job.description is not None
+    assert "About NITES" in job.description
+    assert "Apply for this job" not in job.description
     assert job.source_category == "software-engineering"
     assert job.raw is not None
 
