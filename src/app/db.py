@@ -5,6 +5,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import get_settings
+from app.models import Base
 
 
 def create_database_engine() -> Engine:
@@ -25,3 +26,7 @@ def get_db() -> Iterator[Session]:
 def check_database_connection() -> None:
     with engine.connect() as connection:
         connection.execute(text("SELECT 1"))
+
+
+def initialize_database() -> None:
+    Base.metadata.create_all(bind=engine)
