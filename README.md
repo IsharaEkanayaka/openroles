@@ -24,3 +24,6 @@ identity, job details, collection timestamps, lifecycle status, optional
 salary/category data, and the original source payload. Each job has a
 source-specific `source_id`; the pair of `source` and `source_id` is unique so
 the same posting is not stored twice from one source.
+
+Collector executions are recorded in `src/app/models/collector_run.py`.
+Each run records its source, timing, outcome, item counts, and any error.
