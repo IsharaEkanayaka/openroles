@@ -37,14 +37,46 @@ posted_at, collected_at, last_seen_at, status (open/closed), source_category, sa
 - LATER: users, alerts, alert_deliveries
 
 ## Sources
-- itpro.lk: RSS feed https://itpro.lk/rss/all/ (full description included, no HTML scraping).
-  `remote` comes from location "Remote". `source_id` is the number in the job URL.
-- rooster.jobs: not investigated yet.
-- topjobs.lk: not investigated yet.
+
+### itpro.lk (verified against the live feed)
+Feed: https://itpro.lk/rss/all/ (RSS 2.0, 25 items spanning about 3 days, ttl 30 min).
+Each item has the full description, so never fetch individual job pages.
+
+Field mapping, feed -> Job:
+- source: constant "itpro"
+- source_id: the number in <link>, e.g. /job/15722/... -> "15722"
+- url: <link>
+- title: <title> with the trailing " at {company}" removed
+- company: <dc:creator>, stripped of whitespace
+- location: <description>, which only contains "Location: X"; strip the "Location: " prefix
+- job_type: parsed from <content:encoded>, the "Job Type:" line.
+  Observed values: Full-time, Internship, Part-time, Contract.
+  Map to my fixed set: full-time | part-time | contract | internship.
+  Unknown value -> None, never invent one.
+- description: the HTML in <content:encoded> after the "Description:" label
+  (drop the Company / Location / Job Type lines and the trailing "Apply for this job" link)
+- posted_at: <pubDate> (RFC 822, +0530), converted to UTC
+- raw: the whole <item>
+
+Known limits (do NOT work around these without asking me):
+- remote = True only when location is exactly "Remote". Some jobs mention remote or hybrid
+  only in the description. That's accepted for now. No work_mode field.
+- salary: not a structured field; leave it None for itpro.
+- source_category: not in the "all" feed; leave it None for now.
+- Feed includes non-developer jobs (sales, project management). The collector must NOT
+  filter them. Filtering belongs in alerts later.
+- Dedup key is the job ID from the URL. Do not rely on feed ordering.
+
+### rooster.jobs
+Not investigated yet. Do not write this collector.
+
+### topjobs.lk
+Not investigated yet. Do not write this collector.
 
 ## Out of scope for now
 Multi-user, dashboard/frontend, rooster and topjobs collectors, backfill, ML, deployment.
 
 ## Current state
 Done: project skeleton, Job and CollectorRun models, db setup, config, health endpoint, tests.
-Next: itpro collector, tested against a saved copy of the feed (no network in tests).
+Next: save the itpro feed as a test fixture, then write the itpro collector against it
+(no network in tests).
