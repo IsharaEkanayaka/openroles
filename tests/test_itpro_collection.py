@@ -1,13 +1,25 @@
 from pathlib import Path
 
+import httpx
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.collectors.itpro import collect
+from app.collectors.itpro import collect, fetch_feed
 from app.models import Base, CollectorRun, Job
 
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "itpro_software_engineering.xml"
+
+
+def test_fetch_feed_returns_response_content() -> None:
+    expected_content = FIXTURE_PATH.read_bytes()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url) == "https://example.test/feed.xml"
+        return httpx.Response(200, content=expected_content)
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        assert fetch_feed(client, url="https://example.test/feed.xml") == expected_content
 
 
 def test_collect_saves_feed_jobs_and_reports_counts() -> None:

@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from xml.etree import ElementTree
 
+import httpx
 from sqlalchemy.orm import Session
 
 from app.db import save_jobs
@@ -28,6 +29,17 @@ JOB_TYPES = {
     "part-time": "part-time",
     "contract": "contract",
 }
+FEED_URL = "https://itpro.lk/rss/all/"
+
+
+def fetch_feed(
+    client: httpx.Client,
+    *,
+    url: str = FEED_URL,
+) -> bytes:
+    response = client.get(url)
+    response.raise_for_status()
+    return response.content
 
 
 def parse_feed(feed_xml: str | bytes, source_category: str) -> list[Job]:
