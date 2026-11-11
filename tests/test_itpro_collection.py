@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app.collectors.itpro import collect
-from app.models import Base, Job
+from app.models import Base, CollectorRun, Job
 
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "itpro_software_engineering.xml"
@@ -26,3 +26,12 @@ def test_collect_saves_feed_jobs_and_reports_counts() -> None:
             source_category="software-engineering",
         ) == (25, 0)
         assert session.query(Job).count() == 25
+        runs = session.query(CollectorRun).order_by(CollectorRun.id).all()
+
+        assert len(runs) == 2
+        assert runs[0].source == "itpro"
+        assert runs[0].status == "ok"
+        assert runs[0].items_fetched == 25
+        assert runs[0].items_new == 25
+        assert runs[0].finished_at is not None
+        assert runs[0].error is None

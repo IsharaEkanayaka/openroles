@@ -6,7 +6,7 @@ from xml.etree import ElementTree
 from sqlalchemy.orm import Session
 
 from app.db import save_jobs
-from app.models import Job
+from app.models import CollectorRun, Job
 
 NAMESPACES = {
     "content": "http://purl.org/rss/1.0/modules/content/",
@@ -43,8 +43,22 @@ def collect(
     session: Session,
     source_category: str,
 ) -> tuple[int, int]:
+    started_at = datetime.now(timezone.utc)
     jobs = parse_feed(feed_xml, source_category=source_category)
-    return len(jobs), save_jobs(session, jobs)
+    items_fetched = len(jobs)
+    items_new = save_jobs(session, jobs)
+    session.add(
+        CollectorRun(
+            source="itpro",
+            started_at=started_at,
+            finished_at=datetime.now(timezone.utc),
+            status="ok",
+            items_fetched=items_fetched,
+            items_new=items_new,
+        )
+    )
+    session.commit()
+    return items_fetched, items_new
 
 
 def parse_item(item: ElementTree.Element, source_category: str) -> Job:
