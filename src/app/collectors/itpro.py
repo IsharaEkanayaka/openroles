@@ -42,6 +42,18 @@ def fetch_feed(
     return response.content
 
 
+def collect_live(
+    client: httpx.Client,
+    session: Session,
+    source_category: str,
+) -> tuple[int, int]:
+    return collect(
+        fetch_feed(client),
+        session,
+        source_category=source_category,
+    )
+
+
 def parse_feed(feed_xml: str | bytes, source_category: str) -> list[Job]:
     root = ElementTree.fromstring(feed_xml)
     return [

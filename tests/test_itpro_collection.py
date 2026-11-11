@@ -4,7 +4,7 @@ import httpx
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.collectors.itpro import collect, fetch_feed
+from app.collectors.itpro import collect, collect_live, fetch_feed
 from app.models import Base, CollectorRun, Job
 
 
@@ -20,6 +20,25 @@ def test_fetch_feed_returns_response_content() -> None:
 
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         assert fetch_feed(client, url="https://example.test/feed.xml") == expected_content
+
+
+def test_collect_live_fetches_and_saves_feed() -> None:
+    feed_content = FIXTURE_PATH.read_bytes()
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=feed_content)
+
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        with Session(engine) as session:
+            assert collect_live(
+                client,
+                session,
+                source_category="software-engineering",
+            ) == (25, 25)
+            assert session.query(Job).count() == 25
 
 
 def test_collect_saves_feed_jobs_and_reports_counts() -> None:
