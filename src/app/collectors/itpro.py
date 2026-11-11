@@ -3,6 +3,9 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from xml.etree import ElementTree
 
+from sqlalchemy.orm import Session
+
+from app.db import save_jobs
 from app.models import Job
 
 NAMESPACES = {
@@ -33,6 +36,15 @@ def parse_feed(feed_xml: str | bytes, source_category: str) -> list[Job]:
         parse_item(item, source_category=source_category)
         for item in root.findall("./channel/item")
     ]
+
+
+def collect(
+    feed_xml: str | bytes,
+    session: Session,
+    source_category: str,
+) -> tuple[int, int]:
+    jobs = parse_feed(feed_xml, source_category=source_category)
+    return len(jobs), save_jobs(session, jobs)
 
 
 def parse_item(item: ElementTree.Element, source_category: str) -> Job:
